@@ -26,11 +26,6 @@ let httpLines (uri:string) =
     return new List<String>(lines |> List.toArray)
   }
 
-let languages = httpLines languageUri |> run
-printfn "Languages available"
-languages
-|> Seq.iteri(fun i t -> printfn "%d) %s" i t)
-
 /// key is just a variable for concatinating outputs
 let translateText(key, text, fromLang, toLang) =
     async {
@@ -42,8 +37,13 @@ let translateText(key, text, fromLang, toLang) =
     }
 
 let translateFile(filename : string, fromLang : string, toLang : string, outputfile : string) =
+    let languages = httpLines languageUri |> run
+    printfn "Languages available"
+    languages
+    |> Seq.iteri(fun i t -> printfn "%d) %s" i t)
+
     use sr = new StreamReader(filename)
-    let lines = sr.ReadToEnd().Split([|Environment.NewLine|], StringSplitOptions.None)
+    let lines = sr.ReadToEnd().Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
     printfn "Language Translation started..."
     let task = 
         Async.Parallel
@@ -54,15 +54,10 @@ let translateFile(filename : string, fromLang : string, toLang : string, outputf
     Async.StartWithContinuations(
         task,
         (fun results ->            
-            //let sb = new System.Text.StringBuilder()
-            let o =
-                results
-                |> Array.fold(fun acc item ->
-                    acc + item
-                ) ""                
-//            for r in results do
-//                printfn "%s" r
-//                sb.AppendLine(r) |> ignore
+            let sb = new System.Text.StringBuilder()
+            for r in results do
+                printfn "%s" r
+                sb.AppendLine(r) |> ignore
             let ofile =
                 if outputfile = String.Empty then
                     let f = filename.Substring(0, filename.IndexOf("."))
@@ -70,7 +65,7 @@ let translateFile(filename : string, fromLang : string, toLang : string, outputf
                 else
                     outputfile
             use sw = new StreamWriter(ofile)
-            sw.Write(o)
+            sw.Write(sb.ToString())
             printfn "Language Translation done..."
         ),
         (fun _ -> ()),
@@ -84,7 +79,7 @@ let tLang = Console.ReadLine()
 printf "Enter Resouces File Path:"
 let filename = Console.ReadLine()
     
-if fLang <> String.Empty && languages.Contains(fLang) && tLang <> String.Empty && languages.Contains(tLang) && filename <> String.Empty then
+if fLang <> String.Empty && tLang <> String.Empty && filename <> String.Empty then
     translateFile(filename, fLang, tLang, String.Empty)
 else
     printfn "Input details in-correct"           
@@ -103,41 +98,54 @@ let main args =
     if args.Length = 0 then
         printfn "%s" usage
     else
-        let parseArg(cmp) =
-            let bitString = args.FirstOrDefault(Func<string, bool>(fun s -> s.Contains(cmp)))            
-            if bitString <> String.Empty then
-                let b = bitString.Split([|':'|])
-                Some(b.[0], b.[1])
-            else
-                None
-        let fileArg = parseArg("/f:")
-        let filename = 
-            match fileArg with
-            | Some(b, b1) -> b1
-            | _ -> String.Empty
+        try
+            let parseArg(cmp) =
+                let bitString = args.FirstOrDefault(Func<string, bool>(fun s -> s.Contains(cmp)))            
+                if bitString <> String.Empty then
+                    let b = bitString.Split([|':'|])
+                    Some(b.[0], b.[1])
+                else
+                    None        
+            let parseFileArg(cmp) = 
+                let bitString = args.FirstOrDefault(Func<string, bool>(fun s -> s.Contains(cmp)))            
+                if bitString <> String.Empty then
+                    let s1 = bitString
+                    Some(s1.Substring(s1.IndexOf("/f:") + 3, s1.Length - (s1.IndexOf("/f:") + 3)))
+                else
+                    None
+
+            let fileArg = parseFileArg("/f:")
+            let filename = 
+                match fileArg with
+                | Some(b) -> b
+                | _ -> String.Empty
         
-        let fromArg = parseArg("/from:")
-        let fLang = 
-            match fromArg with
-            | Some(b, b1) -> b1
-            | _ -> String.Empty
+            let fromArg = parseArg("/from:")
+            let fLang = 
+                match fromArg with
+                | Some(b, b1) -> b1
+                | _ -> String.Empty
 
-        let toArg = parseArg("/to:")
-        let tLang = 
-            match toArg with
-            | Some(b, b1) -> b1
-            | _ -> String.Empty
+            let toArg = parseArg("/to:")
+            let tLang = 
+                match toArg with
+                | Some(b, b1) -> b1
+                | _ -> String.Empty
 
-        let outputfileArg = parseArg("/o:")
-        let outputfile = 
-            match outputfileArg with
-            | Some(b, b1) -> b1
-            | _ -> "output.txt"
+            let outputfileArg = parseArg("/o:")
+            let outputfile = 
+                match outputfileArg with
+                | Some(b, b1) -> b1
+                | _ -> "output.txt"
 
-        if fLang <> String.Empty && languages.Contains(fLang) && tLang <> String.Empty && languages.Contains(tLang) && filename <> String.Empty then
-            translateFile(filename, fLang, tLang, outputfile)
-        else
-            printfn "%s" usage        
-    Console.ReadKey() |> ignore
+            if fLang <> String.Empty && tLang <> String.Empty && filename <> String.Empty then
+                translateFile(filename, fLang, tLang, outputfile)
+            else
+                printfn "%s" usage        
+            Console.ReadKey() |> ignore
+        with
+            | e -> 
+                printfn "%s" e.Message
+                printfn "%s" usage
     0
 #endif

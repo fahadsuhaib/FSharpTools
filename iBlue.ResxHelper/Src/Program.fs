@@ -80,7 +80,7 @@ printf "Enter Resouces File Path:"
 let filename = Console.ReadLine()
     
 if fLang <> String.Empty && languages.Contains(fLang) && tLang <> String.Empty && languages.Contains(tLang) && filename <> String.Empty then
-    translateFile(filename, fLang, tLang)
+    translateFile(filename, fLang, tLang, String.Empty)
 else
     printfn "Input details in-correct"           
 #else
