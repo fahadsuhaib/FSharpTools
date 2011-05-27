@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+<assembly><name>ResxHelper</name></assembly>
+<members>
+<member name="T:FSharp.Tutorial.AsyncHelpers">
+
+</member>
+<member name="M:Program.main(System.String[])">
+<summary>
+ /file:sometext.txt /from:en /to:de /o:output.de
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="M:Program.translateText(System.String,System.String,System.String,System.String)">
+<summary>
+ key is just a variable for concatinating outputs
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:Program">
+
+</member>
+</members>
+</doc>
